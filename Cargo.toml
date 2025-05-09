@@ -1,0 +1,20 @@
+[package]
+name = "depup"
+version = "0.0.1"
+edition = "2024"
+description = "A tool for updating your dependencies."
+license = "MIT"
+authors = ["Zander Lewis <zander@zanderlewis.dev>"]
+repository = "https://github.com/zanderlewis/dup"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "^1.0.107"
+toml_edit = "^0.22.26"
+colored = "^3.0.0"
+clap = { version = "4", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "^3.8.1"
+assert_cmd = "2.0.12"
+predicates = "^3.0.4"
