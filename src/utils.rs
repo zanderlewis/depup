@@ -2,6 +2,7 @@ use colored::*;
 use std::path::Path;
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::fs;
 
 static VERBOSE: AtomicBool = AtomicBool::new(false);
 
@@ -88,4 +89,42 @@ pub fn is_command_available(command: &str) -> bool {
     };
 
     matches!(status, Ok(true))
+}
+
+// Check if backup files exist
+pub fn check_backups_exist(project_path: &Path) -> bool {
+    
+    // Look for any .backup files in the project directory
+    if let Ok(entries) = fs::read_dir(project_path) {
+        for entry in entries.flatten() {
+            if let Some(file_name) = entry.file_name().to_str() {
+                if file_name.ends_with(".backup") {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+// Revert changes using backup files
+pub fn revert_changes(project_path: &Path) -> Result<(), std::io::Error> {
+    // Look for any .backup files in the project directory
+    if let Ok(entries) = fs::read_dir(project_path) {
+        for entry in entries.flatten() {
+            if let Some(file_name) = entry.file_name().to_str() {
+                if file_name.ends_with(".backup") {
+                    let original_file_name = file_name.trim_end_matches(".backup");
+                    let original_file_path = project_path.join(original_file_name);
+                    let backup_file_path = project_path.join(file_name);
+
+                    // Restore the original file from the backup
+                    fs::rename(backup_file_path, original_file_path)?;
+                }
+            }
+        }
+    }
+
+    Ok(())
 }

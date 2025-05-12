@@ -8,11 +8,10 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "dup",
     about = "Dependency Update Tool",
     version,
-    author = "Chris L",
-    long_about = "A utility for updating dependencies in various project types (Node.js, PHP, Rust)."
+    author = "Zander <zander@zanderlewis.dev>",
+    long_about = "A utility for updating dependencies."
 )]
 struct Cli {
     /// Skip creating backups of package files before updating
@@ -26,6 +25,10 @@ struct Cli {
     /// Path to the project directory
     #[arg(default_value = ".")]
     path: PathBuf,
+
+    /// Revert changes with the backup files
+    #[arg(short = 'r', long)]
+    revert: bool,
 }
 
 fn main() {
@@ -38,6 +41,21 @@ fn main() {
 
     // Determine if we should create backups (default is true, unless --no-backup is specified)
     let create_backups = !cli.no_backup;
+
+    // If reverting, check if backups exist
+    if cli.revert {
+        if !utils::check_backups_exist(&cli.path) {
+            utils::error("No backup files found. Cannot revert changes.");
+            return;
+        }
+        utils::info("Reverting changes using backup files...");
+        if let Err(e) = utils::revert_changes(&cli.path) {
+            utils::error(&format!("Failed to revert changes: {}", e));
+            return;
+        }
+        utils::success("Changes reverted successfully.");
+        return;
+    }
 
     // If backups are enabled, ensure *.backup is in .gitignore
     if create_backups {
